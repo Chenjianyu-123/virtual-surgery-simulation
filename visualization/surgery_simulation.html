@@ -688,6 +688,16 @@
                 
                 <div class="param-group">
                     <div class="param-row">
+                        <span class="param-label">Force Target</span>
+                        <select id="force-target" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                            <option value="first">First Particle</option>
+                            <option value="last">Last Particle</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="param-group">
+                    <div class="param-row">
                         <span class="param-label" data-i18n="pullForceX">Pull Force X</span>
                         <span class="param-value" id="force-x">0.0</span>
                     </div>
@@ -708,6 +718,22 @@
                         <span class="param-value" id="force-z">0.0</span>
                     </div>
                     <input type="range" id="force-z-slider" min="-10" max="10" step="0.1" value="0">
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Fixed Particle</div>
+                </div>
+                
+                <div class="param-group">
+                    <div class="param-row">
+                        <span class="param-label">Fixed Position</span>
+                        <select id="fixed-particle" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                            <option value="0">First Particle</option>
+                            <option value="last">Last Particle</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -965,6 +991,8 @@
                 this.stiffness = 1.0;
                 this.iterations = 10;
                 this.externalForce = new Vec3(0, 0, 0);
+                this.forceTarget = 'first'; // 'first' or 'last'
+                this.fixedParticleIndex = 0; // 0 for first, -1 for last
                 this.stepCount = 0;
                 this.totalTime = 0;
             }
@@ -981,7 +1009,7 @@
                         velocity: new Vec3(0, 0, 0),
                         mass: 0.01,
                         inverseMass: 100,
-                        isFixed: i === 0
+                        isFixed: false
                     });
                 }
 
@@ -991,6 +1019,20 @@
                         p2: i + 1,
                         restLength: spacing
                     });
+                }
+                
+                this.updateFixedParticle();
+            }
+            
+            setFixedParticleIndex(index) {
+                this.fixedParticleIndex = index;
+                this.updateFixedParticle();
+            }
+            
+            updateFixedParticle() {
+                for (let i = 0; i < this.particles.length; i++) {
+                    this.particles[i].isFixed = (this.fixedParticleIndex === 0 && i === 0) || 
+                                               (this.fixedParticleIndex === -1 && i === this.particles.length - 1);
                 }
             }
 
@@ -1010,10 +1052,18 @@
             }
 
             predictPositions(dt) {
-                for (const p of this.particles) {
+                for (let i = 0; i < this.particles.length; i++) {
+                    const p = this.particles[i];
                     if (p.isFixed) continue;
                     
-                    const totalForce = this.gravity.mul(p.mass).add(this.externalForce.mul(p.mass * 50));
+                    let totalForce = this.gravity.mul(p.mass);
+                    
+                    // 只对选定的目标粒子施加外力
+                    if ((this.forceTarget === 'first' && i === 0) || 
+                        (this.forceTarget === 'last' && i === this.particles.length - 1)) {
+                        totalForce = totalForce.add(this.externalForce.mul(p.mass * 50));
+                    }
+                    
                     const acceleration = totalForce.mul(p.inverseMass);
                     
                     p.velocity = p.velocity.add(acceleration.mul(dt));
@@ -1281,8 +1331,32 @@
                 if (keys['q']) cameraTarget.y -= speed;
                 if (keys['e']) cameraTarget.y += speed;
                 
-                if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['q'] || keys['e']) {
+                // 移动固定端粒子（上下左右键）
+                const particleSpeed = 0.02;
+                const fixedParticle = simulation.particles.find(p => p.isFixed);
+                if (fixedParticle) {
+                    if (keys['arrowup']) {
+                        fixedParticle.position.y += particleSpeed;
+                        fixedParticle.prevPosition.y += particleSpeed;
+                    }
+                    if (keys['arrowdown']) {
+                        fixedParticle.position.y -= particleSpeed;
+                        fixedParticle.prevPosition.y -= particleSpeed;
+                    }
+                    if (keys['arrowleft']) {
+                        fixedParticle.position.x -= particleSpeed;
+                        fixedParticle.prevPosition.x -= particleSpeed;
+                    }
+                    if (keys['arrowright']) {
+                        fixedParticle.position.x += particleSpeed;
+                        fixedParticle.prevPosition.x += particleSpeed;
+                    }
+                }
+                
+                if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['q'] || keys['e'] || 
+                    keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright']) {
                     updateCameraPosition();
+                    updateSutureVisual();
                 }
                 requestAnimationFrame(updateKeyboardControls);
             }
@@ -1445,6 +1519,8 @@
                 document.getElementById('stat-constraints').textContent = particleCount - 1;
                 
                 const currentForce = simulation.externalForce;
+                const currentForceTarget = simulation.forceTarget;
+                const currentFixedIndex = simulation.fixedParticleIndex;
                 const currentParams = {
                     dt: simulation.dt,
                     iterations: simulation.iterations,
@@ -1454,6 +1530,8 @@
                 };
                 
                 simulation = new SutureSimulation();
+                simulation.forceTarget = currentForceTarget;
+                simulation.fixedParticleIndex = currentFixedIndex;
                 simulation.createChain(particleCount, 1.2 / particleCount);
                 simulation.externalForce = currentForce;
                 simulation.dt = currentParams.dt;
@@ -1462,6 +1540,19 @@
                 simulation.damping = currentParams.damping;
                 simulation.stiffness = currentParams.stiffness;
                 
+                updateSutureVisual();
+            });
+
+            // 力作用目标选择
+            document.getElementById('force-target').addEventListener('change', (e) => {
+                simulation.forceTarget = e.target.value;
+            });
+
+            // 固定粒子位置选择
+            document.getElementById('fixed-particle').addEventListener('change', (e) => {
+                const value = e.target.value;
+                const fixedIndex = value === 'last' ? -1 : parseInt(value);
+                simulation.setFixedParticleIndex(fixedIndex);
                 updateSutureVisual();
             });
 
@@ -1505,7 +1596,12 @@
 
         function resetSimulation() {
             stopSimulation();
+            const currentForceTarget = simulation.forceTarget;
+            const currentFixedIndex = simulation.fixedParticleIndex;
+            
             simulation = new SutureSimulation();
+            simulation.forceTarget = currentForceTarget;
+            simulation.fixedParticleIndex = currentFixedIndex;
             simulation.createChain(10, 0.12);
             simulation.dt = parseFloat(document.getElementById('dt-slider').value);
             simulation.iterations = parseInt(document.getElementById('iter-slider').value);
