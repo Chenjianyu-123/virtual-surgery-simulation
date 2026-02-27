@@ -686,8 +686,8 @@
                 
                 <div class="param-group">
                     <div class="param-row">
-                        <span class="param-label">Force Target</span>
-                        <select id="force-target" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                        <span class="param-label" data-i18n="forceTarget">Force Target</span>
+                        <select id="force-target" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'Times New Roman', 'SimSun', serif; font-size: 12px;">
                             <option value="first">First Particle</option>
                             <option value="last">Last Particle</option>
                         </select>
@@ -721,13 +721,13 @@
             
             <div class="panel">
                 <div class="panel-header">
-                    <div class="panel-title">Fixed Particle</div>
+                    <div class="panel-title" data-i18n="fixedParticle">Fixed Particle</div>
                 </div>
                 
                 <div class="param-group">
                     <div class="param-row">
-                        <span class="param-label">Fixed Position</span>
-                        <select id="fixed-particle" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                        <span class="param-label" data-i18n="fixedPosition">Fixed Position</span>
+                        <select id="fixed-particle" class="param-value" style="background: rgba(0, 229, 196, 0.1); border: none; padding: 4px 10px; border-radius: 6px; color: var(--accent-primary); font-family: 'Times New Roman', 'SimSun', serif; font-size: 12px;">
                             <option value="0">First Particle</option>
                             <option value="last">Last Particle</option>
                         </select>
@@ -881,6 +881,7 @@
                 damping: "Damping",
                 stiffness: "Stiffness",
                 interactionForce: "Interaction Force",
+                forceTarget: "Force Target",
                 pullForceX: "Pull Force X",
                 pullForceY: "Pull Force Y",
                 pullForceZ: "Pull Force Z",
@@ -898,7 +899,9 @@
                 forceVsTime: "Force vs Time",
                 energyHistory: "Energy History",
                 velocityMag: "Velocity",
-                controlHint: "Mouse Rotate | Scroll Zoom | WASD Move"
+                controlHint: "Mouse Rotate | Scroll Zoom | WASD Move",
+                fixedParticle: "Fixed Particle",
+                fixedPosition: "Fixed Position"
             },
             zh: {
                 title: "虚拟手术缝合仿真系统",
@@ -917,6 +920,7 @@
                 damping: "阻尼",
                 stiffness: "刚度",
                 interactionForce: "交互作用力",
+                forceTarget: "力作用目标",
                 pullForceX: "拉力 X",
                 pullForceY: "拉力 Y",
                 pullForceZ: "拉力 Z",
@@ -934,7 +938,9 @@
                 forceVsTime: "力曲线",
                 energyHistory: "能量曲线",
                 velocityMag: "速度",
-                controlHint: "鼠标旋转 | 滚轮缩放 | WASD移动"
+                controlHint: "鼠标旋转 | 滚轮缩放 | WASD移动",
+                fixedParticle: "固定粒子",
+                fixedPosition: "固定位置"
             }
         };
 
