@@ -1,0 +1,94 @@
+{
+  "test_timestamp": "2026-02-16T20:07:28.440660",
+  "config": {
+    "simulation_steps": 1000,
+    "dt": 0.001,
+    "output_dir": "test_output",
+    "save_interval": 10
+  },
+  "results": [
+    {
+      "test_name": "\u57fa\u7840\u7c7b\u578b\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.0,
+      "error_message": "",
+      "details": {
+        "volume": 0.16666666666666666,
+        "dot_product": 32.0
+      }
+    },
+    {
+      "test_name": "\u8f6f\u7ec4\u7ec7\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.001031,
+      "error_message": "",
+      "details": {
+        "volume": 0.16666666666666666,
+        "mass": 1.0,
+        "com": [
+          0.25,
+          0.25,
+          0.25
+        ]
+      }
+    },
+    {
+      "test_name": "\u7f1d\u5408\u7ebf\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.212024,
+      "error_message": "",
+      "details": {
+        "initial_length": 0.9,
+        "final_length": 0.9,
+        "com_displacement": 0.04954049999999951
+      }
+    },
+    {
+      "test_name": "\u5668\u68b0\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.003244,
+      "error_message": "",
+      "details": {
+        "expected_acc": 2.0,
+        "actual_acc": 2.0000000000000013,
+        "final_position": [
+          0.010100000000000007,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "test_name": "\u7cfb\u7edf\u96c6\u6210\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.987365,
+      "error_message": "",
+      "details": {
+        "steps": 1000,
+        "data_points": 100,
+        "avg_time_per_step": 0.000987365
+      }
+    },
+    {
+      "test_name": "\u591a\u4f53\u8026\u5408\u6d4b\u8bd5",
+      "passed": false,
+      "duration": 0.050505,
+      "error_message": "\u8026\u5408\u5931\u6548\uff1a\u7f1d\u5408\u7ebf\u672a\u968f\u5668\u68b0\u79fb\u52a8",
+      "details": null
+    },
+    {
+      "test_name": "\u6027\u80fd\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 10.801545,
+      "error_message": "",
+      "details": {
+        "fps": 46.29370478399172,
+        "ms_per_frame": 21.60120916366577,
+        "particles": 100,
+        "steps": 500,
+        "target_fps": 30.0
+      }
+    },
+    {
+      "test_name": "\u7a33\u5b9a\u6027\u6d4b\u8bd5",
+      "passed": 

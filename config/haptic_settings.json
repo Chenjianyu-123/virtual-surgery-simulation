@@ -1,0 +1,49 @@
+{
+  "device": {
+    "type": "PhantomOmni",
+    "deviceIndex": 0,
+    "workspaceScale": 1.0,
+    "maxForce": 10.0,
+    "maxStiffness": 1000.0,
+    "damping": 0.1
+  },
+  "filter": {
+    "type": "adaptive",
+    "normalCutoffFreq": 10.0,
+    "eventCutoffFreq": 50.0,
+    "eventThreshold": 2.0,
+    "eventWindowDuration": 0.1,
+    "smoothingFactor": 0.1
+  },
+  "forceMapping": {
+    "type": "nonlinear",
+    "inputMin": 0.0,
+    "inputMax": 100.0,
+    "outputMin": 0.0,
+    "outputMax": 10.0,
+    "exponent": 0.8,
+    "saturationEnabled": true,
+    "saturationLevel": 10.0
+  },
+  "delayCompensation": {
+    "enabled": true,
+    "predictionHorizon": 0.001,
+    "arModelOrder": 5,
+    "windowSize": 20,
+    "updateThreshold": 10,
+    "learningRate": 0.01,
+    "momentum": 0.9
+  },
+  "stability": {
+    "impedanceLimit": 0.8,
+    "velocityDamping": 0.1,
+    "forceRampUpTime": 0.1,
+    "emergencyStopForce": 15.0
+  },
+  "calibration": {
+    "userCalibrationEnabled": true,
+    "calibrationFile": "config/user_calibration.json",
+    "defaultStiffnessMultiplier": 1.0,
+    "defaultForceMultiplier": 1.0
+  }
+}

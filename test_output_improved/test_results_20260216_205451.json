@@ -1,0 +1,49 @@
+[
+  {
+    "test_name": "\u57fa\u7840\u529f\u80fd\u6d4b\u8bd5",
+    "passed": true,
+    "duration": 0.0,
+    "error_message": "",
+    "details": null
+  },
+  {
+    "test_name": "\u7f1d\u5408\u7ebf\u6539\u8fdb\u6d4b\u8bd5",
+    "passed": false,
+    "duration": 0.24738192558288574,
+    "error_message": "\u957f\u5ea6\u7ea6\u675f\u5931\u6548: nan",
+    "details": null
+  },
+  {
+    "test_name": "\u5668\u68b0\u6539\u8fdb\u6d4b\u8bd5",
+    "passed": false,
+    "duration": 0.0013806819915771484,
+    "error_message": "",
+    "details": null
+  },
+  {
+    "test_name": "\u591a\u4f53\u8026\u5408\u6539\u8fdb\u6d4b\u8bd5",
+    "passed": false,
+    "duration": 0.030534744262695312,
+    "error_message": "\u8026\u5408\u5931\u6548\uff1a\u4f4d\u79fb\u592a\u5c0f (nan)",
+    "details": null
+  },
+  {
+    "test_name": "\u6027\u80fd\u6539\u8fdb\u6d4b\u8bd5",
+    "passed": true,
+    "duration": 4.330756187438965,
+    "error_message": "",
+    "details": {
+      "fps": 115.4688272730266,
+      "ms_per_frame": 8.660346031188965
+    }
+  },
+  {
+    "test_name": "\u7a33\u5b9a\u6027\u6539\u8fdb\u6d4b\u8bd5",
+    "passed": true,
+    "duration": 1.6449775695800781,
+    "error_message": "",
+    "details": {
+      "max_velocity": 1.9392001890798916
+    }
+  }
+]

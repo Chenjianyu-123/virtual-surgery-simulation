@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Surgery Simulation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+        
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-primary: #00ffc8;
+            --accent-secondary: #ff6b9d;
+            --accent-tertiary: #a855f7;
+            --text-primary: #e8e8ed;
+            --text-secondary: #8888a0;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Times New Roman", "SimSun", serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #app {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            grid-template-rows: 60px 1fr 180px;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border-color);
+        }
+        
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .logo h1 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        .lang-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-tertiary);
+            color: var(--accent-tertiary);
+            font-weight: 600;
+        }
+        
+        .lang-btn:hover {
+            background: var(--accent-tertiary);
+            color: var(--bg-primary);
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: "Times New Roman", "SimSun", serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), #00cc9f);
+            color: var(--bg-primary);
+            border: none;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+        }
+        
+ {
+            background        .btn-stop: linear-gradient(135deg, var(--accent-secondary), #ff4777);
+            border: none;
+        }
+        
+        /* Sidebar - Left */
+        .sidebar-left {
+            background: var(--bg-secondary);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .panel {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .panel-title::before {
+            content: '';
+            width: 3px;
+            height: 12px;
+            background: var(--accent-primary);
+            border-radius: 2px;
+        }
+        
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .param-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .param-value {
+            font-family: 'Times New Roman', serif;
+            font-size: 12px;
+            color: var(--accent-primary);
+            background: rgba(0, 255, 200, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-primary);
+            border-radius: 2px;
+            margin-top: 8px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.5);
+        }
+        
+        /* 3D Viewport */
+        #viewport {
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .viewport-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+        }
+        
+        .fps-display {
+            font-family: 'Times New Roman', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-shadow: 0 0 20px rgba(0, 255, 200, 0.5);
+        }
+        
+        .fps-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+        
+        .time-display {
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        
+        /* Sidebar - Right */
+        .sidebar-right {
+            background: var(--bg-secondary);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .force-indicator {
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        
+        .force-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.1s ease;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .stat-card {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Times New Roman', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        
+        /* Bottom Panel */
+        .bottom-panel {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            display: flex;
+            padding: 16px 24px;
+            gap: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .chart-container {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .chart-canvas {
+            width: 100%;
+            height: 100px;
+        }
+        
+        /* Interactive Controls */
+        .control-hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        
+        .control-hint kbd {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 0 2px;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .status-running {
+            background: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-stopped {
+            background: var(--accent-secondary);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .modal h2 {
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">⚕</div>
+                <h1 data-i18n="title">Virtual Surgery Simulation</h1>
+            </div>
+            <div class="header-controls">
+                <button class="btn lang-btn" id="lang-btn">中文</button>
+                <div id="status-indicator">
+                    <span class="status-dot status-stopped"></span>
+                    <span id="status-text" data-i18n="ready">Ready</span>
+                </div>
+                <button class="btn" id="reset-btn" data-i18n="reset">↺ Reset</button>
+                <button class="btn btn-primary" id="start-btn" data-i18n="start">▶ Start</button>
+                <button class="btn btn-stop" id="stop-btn" style="display:none;" data-i18n="stop">■ Stop</button>
+            </div>
+        </header>
+        
+        <aside class="sidebar-left">
+            <div class="panel">
+                <div class="panel-title" data-i18n="simParams">Simulation Parameters</div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="timeStep">Time Step (dt)</span>
+                    <span class="param-value" id="dt-value">0.001</span>
+                </div>
+                <input type="range" id="dt-slider" min="0.0001" max="0.005" step="0.0001" value="0.001">
+                
+                <div class="param-row" style="margin-top: 16px;">
+                    <span class="param-label" data-i18n="solverIter">Solver Iterations</span>
+                    <span class="param-value" id="iter-value">10</span>
+                </div>
+                <input type="range" id="iter-slider" min="1" max="30" step="1" value="10">
+                
+                <div class="param-row" style="margin-top: 16px;">
+                    <span class="param-label" data-i18n="gravity">Gravity</span>
+                    <span class="param-value" id="grav-value">-9.81</span>
+                </div>
+                <input type="range" id="grav-slider" min="-20" max="0" step="0.1" value="-9.81">
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title" data-i18n="sutureProps">Suture Properties</div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="particleCount">Particle Count</span>
+                    <span class="param-value" id="particle-count">20</span>
+                </div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="damping">Damping</span>
+                    <span class="param-value" id="damp-value">0.99</span>
+                </div>
+                <input type="range" id="damp-slider" min="0.9" max="1.0" step="0.01" value="0.99">
+                
+                <div class="param-row" style="margin-top: 16px;">
+                    <span class="param-label" data-i18n="stiffness">Stiffness</span>
+                    <span class="param-value" id="stiff-value">1.0</span>
+                </div>
+                <input type="range" id="stiff-slider" min="0.1" max="2.0" step="0.1" value="1.0">
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title" data-i18n="interactionForce">Interaction Force</div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="pullForceX">Pull Force X</span>
+                    <span class="param-value" id="force-x">0.0</span>
+                </div>
+                <input type="range" id="force-x-slider" min="-10" max="10" step="0.1" value="0">
+                
+                <div class="param-row" style="margin-top: 8px;">
+                    <span class="param-label" data-i18n="pullForceY">Pull Force Y</span>
+                    <span class="param-value" id="force-y">0.0</span>
+                </div>
+                <input type="range" id="force-y-slider" min="-10" max="10" step="0.1" value="0">
+                
+                <div class="param-row" style="margin-top: 8px;">
+                    <span class="param-label" data-i18n="pullForceZ">Pull Force Z</span>
+                    <span class="param-value" id="force-z">0.0</span>
+                </div>
+                <input type="range" id="force-z-slider" min="-10" max="10" step="0.1" value="0">
+            </div>
+        </aside>
+        
+        <main id="viewport">
+            <div id="canvas-container"></div>
+            
+            <div class="viewport-overlay">
+                <div class="fps-display" id="fps">60</div>
+                <div class="fps-label">FPS</div>
+                <div class="time-display" id="time-display">Time: 0.000s</div>
+            </div>
+            
+            <div class="control-hint" data-i18n="controlHint">
+                <kbd>Mouse</kbd> Rotate | <kbd>Scroll</kbd> Zoom | <kbd>WASD</kbd> Move
+            </div>
+        </main>
+        
+        <aside class="sidebar-right">
+            <div class="panel">
+                <div class="panel-title" data-i18n="forceFeedback">Force Feedback</div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="totalForce">Total Force</span>
+                    <span class="param-value" id="total-force">0.00 N</span>
+                </div>
+                <div class="force-indicator">
+                    <div class="force-bar" id="force-bar" style="width: 0%"></div>
+                </div>
+                
+                <div class="param-row" style="margin-top: 12px;">
+                    <span class="param-label" data-i18n="xComponent">X Component</span>
+                    <span class="param-value" id="force-x-display">0.00</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label" data-i18n="yComponent">Y Component</span>
+                    <span class="param-value" id="force-y-display">0.00</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label" data-i18n="zComponent">Z Component</span>
+                    <span class="param-value" id="force-z-display">0.00</span>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title" data-i18n="statistics">Statistics</div>
+                
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-particles">20</div>
+                        <div class="stat-label" data-i18n="particles">Particles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-constraints">19</div>
+                        <div class="stat-label" data-i18n="constraints">Constraints</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-steps">0</div>
+                        <div class="stat-label" data-i18n="steps">Steps</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-fps">60</div>
+                        <div class="stat-label" data-i18n="fps">FPS</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title" data-i18n="objectInfo">Object Info</div>
+                
+                <div class="param-row">
+                    <span class="param-label" data-i18n="tissueNodes">Tissue Nodes</span>
+                    <span class="param-value" id="tissue-nodes">0</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label" data-i18n="tissueElems">Tissue Elements</span>
+                    <span class="param-value" id="tissue-elems">0</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label" data-i18n="collisionPairs">Collision Pairs</span>
+                    <span class="param-value" id="collision-pairs">0</span>
+                </div>
+            </div>
+        </aside>
+        
+        <div class="bottom-panel">
+            <div class="chart-container">
+                <div class="chart-title" data-i18n="forceVsTime">Force vs Time</div>
+                <canvas class="chart-canvas" id="force-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title" data-i18n="energyHistory">Energy History</div>
+                <canvas class="chart-canvas" id="energy-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title" data-i18n="velocityMag">Velocity Magnitude</div>
+                <canvas class="chart-canvas" id="velocity-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="info-modal">
+        <div class="modal-content">
+            <h2>About This Simulation</h2>
+            <p style="color: var(--text-secondary); line-height: 1.6;">
+                Virtual Surgery Simulation using XPBD (Extended Position-Based Dynamics) 
+                for real-time soft tissue and suture simulation. Features haptic feedback 
+                simulation and interactive 3D visualization.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="document.getElementById('info-modal').classList.remove('active')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // ========== Internationalization ==========
+        const translations = {
+            en: {
+                title: "Virtual Surgery Simulation",
+                ready: "Ready",
+                running: "Running",
+                paused: "Paused",
+                reset: "↺ Reset",
+                start: "▶ Start",
+                stop: "■ Stop",
+                simParams: "Simulation Parameters",
+                timeStep: "Time Step (dt)",
+                solverIter: "Solver Iterations",
+                gravity: "Gravity",
+                sutureProps: "Suture Properties",
+                particleCount: "Particle Count",
+                damping: "Damping",
+                stiffness: "Stiffness",
+                interactionForce: "Interaction Force",
+                pullForceX: "Pull Force X",
+                pullForceY: "Pull Force Y",
+                pullForceZ: "Pull Force Z",
+                forceFeedback: "Force Feedback",
+                totalForce: "Total Force",
+                xComponent: "X Component",
+                yComponent: "Y Component",
+                zComponent: "Z Component",
+                statistics: "Statistics",
+                particles: "Particles",
+                constraints: "Constraints",
+                steps: "Steps",
+                fps: "FPS",
+                objectInfo: "Object Info",
+                tissueNodes: "Tissue Nodes",
+                tissueElems: "Tissue Elements",
+                collisionPairs: "Collision Pairs",
+                forceVsTime: "Force vs Time",
+                energyHistory: "Energy History",
+                velocityMag: "Velocity Magnitude",
+                controlHint: "Mouse Rotate | Scroll Zoom | WASD Move",
+                aboutTitle: "About This Simulation",
+                aboutText: "Virtual Surgery Simulation using XPBD (Extended Position-Based Dynamics) for real-time soft tissue and suture simulation. Features haptic feedback simulation and interactive 3D visualization."
+            },
+            zh: {
+                title: "虚拟手术缝合仿真系统",
+                ready: "就绪",
+                running: "运行中",
+                paused: "已暂停",
+                reset: "↺ 重置",
+                start: "▶ 开始",
+                stop: "■ 停止",
+                simParams: "仿真参数",
+                timeStep: "时间步长 (dt)",
+                solverIter: "求解器迭代次数",
+                gravity: "重力加速度",
+                sutureProps: "缝合线属性",
+                particleCount: "粒子数量",
+                damping: "阻尼系数",
+                stiffness: "刚度系数",
+                interactionForce: "交互作用力",
+                pullForceX: "拉力 X",
+                pullForceY: "拉力 Y",
+                pullForceZ: "拉力 Z",
+                forceFeedback: "力反馈",
+                totalForce: "总力",
+                xComponent: "X 分量",
+                yComponent: "Y 分量",
+                zComponent: "Z 分量",
+                statistics: "统计数据",
+                particles: "粒子数",
+                constraints: "约束数",
+                steps: "步数",
+                fps: "帧率",
+                objectInfo: "对象信息",
+                tissueNodes: "组织节点",
+                tissueElems: "组织单元",
+                collisionPairs: "碰撞对",
+                forceVsTime: "力-时间曲线",
+                energyHistory: "能量历史",
+                velocityMag: "速度大小",
+                controlHint: "鼠标旋转 | 滚轮缩放 | WASD移动",
+                aboutTitle: "关于本仿真",
+                aboutText: "虚拟手术缝合仿真系统，使用XPBD（扩展基于位置的动力学）实现软组织和缝合线的实时仿真。具备力反馈模拟和交互式3D可视化功能。"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update labels in panels (for dynamic elements without data-i18n)
+            const panels = document.querySelectorAll('.panel-title, .param-label, .stat-label, .chart-title');
+            panels.forEach(panel => {
+                const text = panel.textContent.trim();
+                for (const [key, value] of Object.entries(translations[lang])) {
+                    if (translations.en[key] === text) {
+                        panel.textContent = value;
+                        break;
+                    }
+                }
+            });
+            
+            // Update button text
+            document.getElementById('lang-btn').textContent = lang === 'en' ? '中文' : 'English';
+            
+            // Update status text
+            const statusText = document.getElementById('status-text');
+            if (statusText) {
+                const currentStatus = statusText.textContent;
+                if (currentStatus === 'Running') statusText.textContent = translations[lang].running;
+                else if (currentStatus === 'Paused') statusText.textContent = translations[lang].paused;
+                else if (currentStatus === 'Ready') statusText.textContent = translations[lang].ready;
+            }
+            
+            // Save preference
+            localStorage.setItem('simLang', lang);
+        }
+
+        // ========== Simulation Engine ==========
+        class Vec3 {
+            constructor(x = 0, y = 0, z = 0) {
+                this.x = x; this.y = y; this.z = z;
+            }
+            add(v) { return new Vec3(this.x + v.x, this.y + v.y, this.z + v.z); }
+            sub(v) { return new Vec3(this.x - v.x, this.y - v.y, this.z - v.z); }
+            mul(s) { return new Vec3(this.x * s, this.y * s, this.z * s); }
+            dot(v) { return this.x * v.x + this.y * v.y + this.z * v.z; }
+            length() { return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z); }
+            normalize() {
+                const len = this.length();
+                return len > 0 ? this.mul(1 / len) : new Vec3();
+            }
+            clone() { return new Vec3(this.x, this.y, this.z); }
+        }
+
+        class SutureSimulation {
+            constructor() {
+                this.particles = [];
+                this.constraints = [];
+                this.dt = 0.001;
+                this.gravity = new Vec3(0, -9.81, 0);
+                this.damping = 0.99;
+                this.stiffness = 1.0;
+                this.iterations = 10;
+                this.externalForce = new Vec3(0, 0, 0);
+                this.stepCount = 0;
+                this.totalTime = 0;
+            }
+
+            createChain(count, spacing = 0.15) {
+                this.particles = [];
+                this.constraints = [];
+                
+                for (let i = 0; i < count; i++) {
+                    const y = 1.0 - i * spacing;
+                    this.particles.push({
+                        position: new Vec3(0, y, 0),
+                        prevPosition: new Vec3(0, y, 0),
+                        velocity: new Vec3(0, 0, 0),
+                        mass: 0.01,
+                        inverseMass: 100,
+                        isFixed: i === 0 || i === count - 1
+                    });
+                }
+
+                for (let i = 0; i < count - 1; i++) {
+                    this.constraints.push({
+                        p1: i,
+                        p2: i + 1,
+                        restLength: spacing
+                    });
+                }
+            }
+
+            simulate(dt) {
+                this.dt = dt;
+                const subSteps = 4;
+                const subDt = dt / subSteps;
+
+                for (let step = 0; step < subSteps; step++) {
+                    this.predictPositions(subDt);
+                    this.solveConstraints();
+                    this.integrateVelocity(subDt);
+                }
+
+                this.stepCount++;
+                this.totalTime += dt;
+            }
+
+            predictPositions(dt) {
+                for (const p of this.particles) {
+                    if (p.isFixed) continue;
+                    
+                    const totalForce = this.gravity.mul(p.mass).add(this.externalForce.mul(p.mass));
+                    const acceleration = totalForce.mul(p.inverseMass);
+                    
+                    p.velocity = p.velocity.add(acceleration.mul(dt));
+                    p.velocity = p.velocity.mul(this.damping);
+                    p.position = p.position.add(p.velocity.mul(dt));
+                }
+            }
+
+            solveConstraints() {
+                for (let iter = 0; iter < this.iterations; iter++) {
+                    for (const c of this.constraints) {
+                        const p1 = this.particles[c.p1];
+                        const p2 = this.particles[c.p2];
+                        
+                        const delta = p2.position.sub(p1.position);
+                        const dist = delta.length();
+                        if (dist < 1e-10) continue;
+                        
+                        const diff = (dist - c.restLength) / dist;
+                        const w1 = p1.inverseMass;
+                        const w2 = p2.inverseMass;
+                        const wSum = w1 + w2;
+                        if (wSum < 1e-10) continue;
+                        
+                        const correction = delta.mul(diff * this.stiffness * 0.5 / wSum);
+                        
+                        if (!p1.isFixed) p1.position = p1.position.add(correction.mul(w1));
+                        if (!p2.isFixed) p2.position = p2.position.sub(correction.mul(w2));
+                    }
+                }
+            }
+
+            integrateVelocity(dt) {
+                for (const p of this.particles) {
+                    if (p.isFixed) continue;
+                    p.velocity = p.position.sub(p.prevPosition).mul(1 / dt);
+                    p.prevPosition = p.position.clone();
+                }
+            }
+
+            getTotalForce() {
+                let total = 0;
+                for (const p of this.particles) {
+                    if (!p.isFixed) {
+                        const f = p.velocity.mul(p.mass / this.dt);
+                        total += f.length();
+                    }
+                }
+                return total;
+            }
+
+            getTotalEnergy() {
+                let energy = 0;
+                for (const p of this.particles) {
+                    if (!p.isFixed) {
+                        energy += 0.5 * p.mass * p.velocity.length() ** 2;
+                        energy += p.mass * Math.abs(this.gravity.y) * p.position.y;
+                    }
+                }
+                return energy;
+            }
+        }
+
+        // ========== 3D Visualization ==========
+        let scene, camera, renderer, sutureLine, suturePoints, tissueMesh;
+        let simulation = new SutureSimulation();
+        let isRunning = false;
+        let animationId;
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fps = 60;
+        let forceHistory = [];
+        let energyHistory = [];
+        let velocityHistory = [];
+
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0f);
+
+            camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            camera.position.set(2, 1.5, 3);
+            camera.lookAt(0, 0.5, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404050, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+
+            const pointLight1 = new THREE.PointLight(0x00ffc8, 0.5, 10);
+            pointLight1.position.set(-2, 2, 2);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xff6b9d, 0.3, 10);
+            pointLight2.position.set(2, 1, -2);
+            scene.add(pointLight2);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 20, 0x1a1a25, 0x1a1a25);
+            gridHelper.position.y = -0.5;
+            scene.add(gridHelper);
+
+            // Tissue plane
+            const tissueGeometry = new THREE.PlaneGeometry(2, 2, 10, 10);
+            const tissueMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2a2a3a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.5
+            });
+            tissueMesh = new THREE.Mesh(tissueGeometry, tissueMaterial);
+            tissueMesh.rotation.x = -Math.PI / 2;
+            tissueMesh.position.y = -0.01;
+            scene.add(tissueMesh);
+
+            // Suture line
+            const lineGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(60);
+            lineGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const lineMaterial = new THREE.LineBasicMaterial({ 
+                color: 0x00ffc8, 
+                linewidth: 2 
+            });
+            sutureLine = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(sutureLine);
+
+            // Suture particles
+            const pointsGeometry = new THREE.BufferGeometry();
+            const pointsPositions = new Float32Array(60);
+            pointsGeometry.setAttribute('position', new THREE.BufferAttribute(pointsPositions, 3));
+            const pointsMaterial = new THREE.PointsMaterial({
+                color: 0xff6b9d,
+                size: 0.08,
+                sizeAttenuation: true
+            });
+            suturePoints = new THREE.Points(pointsGeometry, pointsMaterial);
+            scene.add(suturePoints);
+
+            // Anchor points
+            const anchorGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const anchorMaterial = new THREE.MeshPhongMaterial({ color: 0xa855f7 });
+            const anchor1 = new THREE.Mesh(anchorGeometry, anchorMaterial);
+            anchor1.position.set(0, 1, 0);
+            scene.add(anchor1);
+            
+            const anchor2 = new THREE.Mesh(anchorGeometry, anchorMaterial);
+            scene.add(anchor2);
+
+            updateSutureVisual();
+
+            // Camera controls
+            setupCameraControls();
+
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function updateSutureVisual() {
+            const positions = sutureLine.geometry.attributes.position.array;
+            const pointsPos = suturePoints.geometry.attributes.position.array;
+            
+            for (let i = 0; i < simulation.particles.length; i++) {
+                const p = simulation.particles[i].position;
+                positions[i * 3] = p.x;
+                positions[i * 3 + 1] = p.y;
+                positions[i * 3 + 2] = p.z;
+                
+                pointsPos[i * 3] = p.x;
+                pointsPos[i * 3 + 1] = p.y;
+                pointsPos[i * 3 + 2] = p.z;
+            }
+            
+            if (simulation.particles.length > 0) {
+                const lastP = simulation.particles[simulation.particles.length - 1].position;
+                scene.children.find(c => c.geometry?.type === 'SphereGeometry' && c.material?.color.getHex() === 0xa855f7 && c.position.y > 0.5)?.position.set(lastP.x, lastP.y, lastP.z);
+            }
+            
+            sutureLine.geometry.attributes.position.needsUpdate = true;
+            suturePoints.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function setupCameraControls() {
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            let cameraAngle = { theta: Math.PI / 4, phi: Math.PI / 4 };
+            let cameraDistance = 3.5;
+            let cameraTarget = new THREE.Vector3(0, 0.5, 0);
+
+            const canvas = renderer.domElement;
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                
+                cameraAngle.theta -= deltaX * 0.01;
+                cameraAngle.phi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraAngle.phi + deltaY * 0.01));
+                
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+                
+                updateCameraPosition();
+            });
+
+            canvas.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('mouseleave', () => isDragging = false);
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                cameraDistance = Math.max(1, Math.min(10, cameraDistance + e.deltaY * 0.01));
+                updateCameraPosition();
+            });
+
+            function updateCameraPosition() {
+                camera.position.x = cameraTarget.x + cameraDistance * Math.sin(cameraAngle.phi) * Math.cos(cameraAngle.theta);
+                camera.position.y = cameraTarget.y + cameraDistance * Math.cos(cameraAngle.phi);
+                camera.position.z = cameraTarget.z + cameraDistance * Math.sin(cameraAngle.phi) * Math.sin(cameraAngle.theta);
+                camera.lookAt(cameraTarget);
+            }
+
+            // Keyboard controls
+            const keys = {};
+            window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+            function updateKeyboardControls() {
+                const speed = 0.05;
+                if (keys['w']) cameraTarget.z -= speed;
+                if (keys['s']) cameraTarget.z += speed;
+                if (keys['a']) cameraTarget.x -= speed;
+                if (keys['d']) cameraTarget.x += speed;
+                if (keys['q']) cameraTarget.y -= speed;
+                if (keys['e']) cameraTarget.y += speed;
+                
+                if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['q'] || keys['e']) {
+                    updateCameraPosition();
+                }
+                requestAnimationFrame(updateKeyboardControls);
+            }
+            updateKeyboardControls();
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+
+            const currentTime = performance.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            // FPS calculation
+            frameCount++;
+            if (frameCount >= 30) {
+                fps = Math.round(30 / deltaTime / 30 * 60);
+                frameCount = 0;
+            }
+
+            if (isRunning) {
+                simulation.simulate(simulation.dt);
+                updateSutureVisual();
+                
+                // Update charts
+                forceHistory.push(simulation.getTotalForce());
+                energyHistory.push(simulation.getTotalEnergy());
+                
+                let totalVel = 0;
+                for (const p of simulation.particles) {
+                    totalVel += p.velocity.length();
+                }
+                velocityHistory.push(totalVel);
+                
+                if (forceHistory.length > 200) forceHistory.shift();
+                if (energyHistory.length > 200) energyHistory.shift();
+                if (velocityHistory.length > 200) velocityHistory.shift();
+                
+                updateCharts();
+            }
+
+            updateUI();
+            renderer.render(scene, camera);
+        }
+
+        function updateUI() {
+            document.getElementById('fps').textContent = fps;
+            document.getElementById('time-display').textContent = `Time: ${simulation.totalTime.toFixed(3)}s`;
+            document.getElementById('stat-steps').textContent = simulation.stepCount;
+            document.getElementById('stat-fps').textContent = fps;
+            
+            const force = simulation.getTotalForce();
+            document.getElementById('total-force').textContent = force.toFixed(2) + ' N';
+            document.getElementById('force-bar').style.width = Math.min(100, force * 10) + '%';
+            
+            document.getElementById('force-x-display').textContent = simulation.externalForce.x.toFixed(2);
+            document.getElementById('force-y-display').textContent = simulation.externalForce.y.toFixed(2);
+            document.getElementById('force-z-display').textContent = simulation.externalForce.z.toFixed(2);
+        }
+
+        function updateCharts() {
+            drawChart('force-chart', forceHistory, '#00ffc8');
+            drawChart('energy-chart', energyHistory, '#ff6b9d');
+            drawChart('velocity-chart', velocityHistory, '#a855f7');
+        }
+
+        function drawChart(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width = canvas.clientWidth;
+            const height = canvas.height = canvas.clientHeight;
+            
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.5)';
+            ctx.fillRect(0, 0, width, height);
+            
+            if (data.length < 2) return;
+            
+            const maxVal = Math.max(...data, 0.001);
+            const minVal = Math.min(...data, 0);
+            const range = maxVal - minVal || 1;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < data.length; i++) {
+                const x = (i / (data.length - 1)) * width;
+                const y = height - ((data[i] - minVal) / range) * height * 0.8 - height * 0.1;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+        }
+
+        // ========== UI Event Handlers ==========
+        function initControls() {
+            // Language toggle
+            document.getElementById('lang-btn').addEventListener('click', () => {
+                const newLang = currentLang === 'en' ? 'zh' : 'en';
+                setLanguage(newLang);
+            });
+            
+            // Load saved language preference
+            const savedLang = localStorage.getItem('simLang');
+            if (savedLang) {
+                setLanguage(savedLang);
+            }
+            
+            // Sliders
+            document.getElementById('dt-slider').addEventListener('input', (e) => {
+                simulation.dt = parseFloat(e.target.value);
+                document.getElementById('dt-value').textContent = simulation.dt.toFixed(4);
+            });
+
+            document.getElementById('iter-slider').addEventListener('input', (e) => {
+                simulation.iterations = parseInt(e.target.value);
+                document.getElementById('iter-value').textContent = simulation.iterations;
+            });
+
+            document.getElementById('grav-slider').addEventListener('input', (e) => {
+                simulation.gravity.y = parseFloat(e.target.value);
+                document.getElementById('grav-value').textContent = simulation.gravity.y.toFixed(2);
+            });
+
+            document.getElementById('damp-slider').addEventListener('input', (e) => {
+                simulation.damping = parseFloat(e.target.value);
+                document.getElementById('damp-value').textContent = simulation.damping.toFixed(2);
+            });
+
+            document.getElementById('stiff-slider').addEventListener('input', (e) => {
+                simulation.stiffness = parseFloat(e.target.value);
+                document.getElementById('stiff-value').textContent = simulation.stiffness.toFixed(1);
+            });
+
+            // Force sliders
+            document.getElementById('force-x-slider').addEventListener('input', (e) => {
+                simulation.externalForce.x = parseFloat(e.target.value);
+                document.getElementById('force-x').textContent = simulation.externalForce.x.toFixed(1);
+            });
+
+            document.getElementById('force-y-slider').addEventListener('input', (e) => {
+                simulation.externalForce.y = parseFloat(e.target.value);
+                document.getElementById('force-y').textContent = simulation.externalForce.y.toFixed(1);
+            });
+
+            document.getElementById('force-z-slider').addEventListener('input', (e) => {
+                simulation.externalForce.z = parseFloat(e.target.value);
+                document.getElementById('force-z').textContent = simulation.externalForce.z.toFixed(1);
+            });
+
+            // Buttons
+            document.getElementById('start-btn').addEventListener('click', startSimulation);
+            document.getElementById('stop-btn').addEventListener('click', stopSimulation);
+            document.getElementById('reset-btn').addEventListener('click', resetSimulation);
+        }
+
+        function startSimulation() {
+            isRunning = true;
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'flex';
+            document.getElementById('status-indicator').innerHTML = '<span class="status-dot status-running"></span><span>Running</span>';
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+            document.getElementById('start-btn').style.display = 'flex';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('status-indicator').innerHTML = '<span class="status-dot status-stopped"></span><span>Paused</span>';
+        }
+
+        function resetSimulation() {
+            stopSimulation();
+            simulation = new SutureSimulation();
+            simulation.createChain(20);
+            simulation.dt = parseFloat(document.getElementById('dt-slider').value);
+            simulation.iterations = parseInt(document.getElementById('iter-slider').value);
+            simulation.gravity.y = parseFloat(document.getElementById('grav-slider').value);
+            simulation.damping = parseFloat(document.getElementById('damp-slider').value);
+            simulation.stiffness = parseFloat(document.getElementById('stiff-slider').value);
+            
+            forceHistory = [];
+            energyHistory = [];
+            velocityHistory = [];
+            
+            updateSutureVisual();
+            updateUI();
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            simulation.createChain(20);
+            initThreeJS();
+            initControls();
+            animate();
+        });
+    </script>
+</body>
+</html>

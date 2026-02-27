@@ -1,0 +1,153 @@
+### 虚拟手术缝合多体耦合仿真系统程序设计流程文档
+
+#### 1. 系统概述
+
+本系统实现组织-缝合线-器械的多体耦合仿真与实时交互控制，包含接触检测、动力学求解、力反馈输出三大核心模块。系统采用模块化设计，支持 GPU 并行加速和参数动态优化。
+
+#### 2. 模块划分
+
+- **场景管理模块**：初始化软组织（四面体网格）、缝合线（质点链）、器械（刚体），加载材质参数。
+
+- **接触检测模块**：分层检测（AABB 粗筛 + 定制精检 + 穿透修正），支持各向异性刚度增强。
+
+- **动力学求解模块**：软组织有限元求解（准静态/动态）、缝合线 XPBD 求解、器械刚体动力学求解，采用迭代耦合。
+
+- **约束处理模块**：管理多体约束（点对点、刚体-质点、锚定、自碰撞），实现分组投影与冲突加权。
+
+- **力反馈模块**：自适应滤波、非线性映射、延迟补偿（AR 模型在线学习），与力反馈设备通信。
+
+- **可视化与交互模块**：基于 OpenGL/Vulkan 渲染，接收用户输入（操作力、夹持力）。
+
+- **参数标定与优化模块**：离线实验数据拟合参数；在线调整（如用户校准）。
+
+#### 3. 核心数据结构
+
+- **软组织**：`Tissue`类，包含节点数组`nodes`（位置、速度）、单元数组`elements`（节点索引、材料属性）、刚度矩阵`K`、外力向量`F_ext`。
+
+- **缝合线**：`Suture`类，包含质点数组`particles`（位置、速度、质量、半径）、约束数组`constraints`（类型、刚度、失效阈值）。
+
+- **器械**：`Instrument`类，包含刚体`rigid_body`（位置、姿态、线速度、角速度、质量、惯量）、夹持点`grasp_points`。
+
+- **接触对**：`ContactPair`结构，包含类型、接触点坐标、法向量、穿透深度、摩擦系数、刚度增强系数。
+
+- **约束**：基类`Constraint`，派生`DistanceConstraint`、`BendingConstraint`、`AnchorConstraint`等，包含`solve()`方法。
+
+#### 4. 算法流程（伪代码）
+
+    初始化场景()
+    设置时间步长 dt = 0.001 s
+    主循环 while running:
+    # 1. 用户输入采集
+    force_user, torque_user = handle_device_input()
+    # 2. 多体接触检测
+    candidate_pairs = broad_phase()  # AABB树并行遍历
+    contact_list = []
+    for each pair in candidate_pairs:
+        contact_info = narrow_phase(pair)  # 根据类型调用不同算法
+        if contact_info.penetration > 0:
+            contact_info.force = compute_contact_force(contact_info)  # 穿刺力/摩擦力/夹持力
+            contact_list.append(contact_info)
+
+    # 3. 动力学迭代耦合
+    for iter in 1..max_iter:
+        # 3.1 软组织有限元求解（准静态）
+        assemble_external_forces(contact_list)  # 将接触力映射到节点
+        solve_fem()  # 共轭梯度法求解位移
+
+        # 3.2 缝合线XPBD求解
+        apply_external_forces(contact_list)  # 摩擦力、锚定力
+        solve_xpbd()  # 按约束分组迭代
+
+        # 3.3 器械刚体求解
+        apply_forces(force_user, torque_user, contact_list)
+        integrate_rigid_body(dt)
+
+        # 3.4 多体约束更新（分层投影）
+        project_constraints()  # 先关键组，再非关键组，局部修正
+
+        # 3.5 收敛判断
+        if max_displacement_change < tol and max_force_residual < tol*10:
+            break
+
+    # 4. 力反馈输出
+    total_force = compute_feedback_force(contact_list, instrument_state)
+    filtered_force = adaptive_filter(total_force)  # 事件检测+动态截止频率
+    mapped_force = nonlinear_map(filtered_force)   # 用户校准参数
+    send_to_device(mapped_force)
+
+    # 5. 渲染更新
+    render_scene()
+
+    # 6. 在线学习（误差超标时）
+    if error_exceed_threshold:
+        update_ar_model()  # 滑动窗口+动量更新
+
+#### 5. 关键子模块实现细节
+
+##### 5.1 接触检测
+
+- **AABB 树**：为每个组件构建，并行遍历。
+
+- **针-组织**：线段-四面体相交（Möller-Trumbore）。
+
+- **线-组织**：质点-三角形距离 + 库仑/Stribeck 摩擦。
+
+- **器械-线**：GJK 算法计算最短距离。
+
+- **穿透修正**：根据各向异性刚度增强系数调整局部刚度。
+
+##### 5.2 动力学求解
+
+- **软组织**：Total Lagrangian 隐式积分，组装整体刚度矩阵，预处理共轭梯度法。
+
+- **缝合线**：XPBD 循环，按约束组迭代，采用 Gauss-Seidel 风格。
+
+- **器械**：半隐式欧拉，四元数更新姿态。
+
+##### 5.3 约束投影
+
+- **关键组**：距离约束、自碰撞（罚函数/位置修正）、夹持约束。
+
+- **非关键组**：弯曲、扭转、锚定（可弹性）。
+
+- 算法：关键组迭代至收敛 → 非关键组投影 → 局部修正关键组，重复 3 次。
+
+##### 5.4 力反馈处理
+
+- **自适应滤波**：状态机检测事件，事件窗口截止频率 50Hz，正常 10Hz。
+
+- **非线性映射**：分段线性，参数从配置文件读取（支持用户校准）。
+
+- **延迟补偿**：AR 模型预测，模型参数在线更新（累积 10 次事件后触发，滑动窗口大小自适应）。
+
+##### 5.5 参数标定接口
+
+- 提供离线标定工具，输入实验数据，输出模型参数（如多项式系数、Stribeck 参数）。
+
+- 运行时参数以 JSON 格式加载，支持热替换。
+
+#### 6. 并行优化
+
+- 接触检测粗筛和精检使用 CUDA 并行，每个线程处理一个包围盒或几何对。
+
+- 有限元单元应力计算并行化。
+
+- XPBD 约束迭代并行化（但需注意依赖关系，可分组并行）。
+
+#### 7. 性能目标
+
+- 每帧耗时 < 33 ms (30 fps)
+
+- 力反馈延迟 < 5 ms
+
+- 支持软组织单元数 > 10k，缝合线质点 > 100
+
+#### 8. 验证与测试
+
+- 单元测试：各模块功能测试。
+
+- 集成测试：运行典型缝合任务，记录性能指标。
+
+- 对比验证：与临床实验数据对比力-位移曲线。
+
+\

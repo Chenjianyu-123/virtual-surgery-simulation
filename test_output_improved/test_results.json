@@ -1,0 +1,49 @@
+{
+  "test_timestamp": "2026-02-16T20:52:52.215092",
+  "results": [
+    {
+      "test_name": "\u57fa\u7840\u529f\u80fd\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 0.0008699893951416016,
+      "details": null
+    },
+    {
+      "test_name": "\u7f1d\u5408\u7ebf\u6539\u8fdb\u6d4b\u8bd5",
+      "passed": false,
+      "duration": 0.23798751831054688,
+      "details": null
+    },
+    {
+      "test_name": "\u5668\u68b0\u6539\u8fdb\u6d4b\u8bd5",
+      "passed": false,
+      "duration": 1.9550323486328125e-05,
+      "details": null
+    },
+    {
+      "test_name": "\u591a\u4f53\u8026\u5408\u6539\u8fdb\u6d4b\u8bd5",
+      "passed": false,
+      "duration": 0.05411195755004883,
+      "details": null
+    },
+    {
+      "test_name": "\u6027\u80fd\u6539\u8fdb\u6d4b\u8bd5",
+      "passed": true,
+      "duration": 6.946439504623413,
+      "details": {
+        "fps": 71.98959745044165,
+        "ms_per_frame": 13.89089584350586
+      }
+    },
+    {
+      "test_name": "\u7a33\u5b9a\u6027\u6539\u8fdb\u6d4b\u8bd5",
+      "passed": false,
+      "duration": 2.4929819107055664,
+      "details": null
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 2,
+    "total_duration": 9.732410430908203
+  }
+}

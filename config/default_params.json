@@ -1,0 +1,57 @@
+{
+  "simulation": {
+    "timeStep": 0.001,
+    "maxIterations": 10,
+    "tolerance": 1e-06,
+    "contactStiffness": 1000000.0,
+    "frictionCoefficient": 0.3,
+    "useGPU": true,
+    "gravity": [0.0, -9.81, 0.0]
+  },
+  "fem": {
+    "solverType": "PCG",
+    "maxCGIterations": 1000,
+    "cgTolerance": 1e-06,
+    "usePreconditioner": true,
+    "materialModel": "NeoHookean"
+  },
+  "xpbd": {
+    "solverIterations": 10,
+    "damping": 0.99,
+    "substepCount": 1
+  },
+  "collision": {
+    "broadPhaseType": "AABBTree",
+    "narrowPhaseType": "GJK_EPA",
+    "enableSelfCollision": true,
+    "contactOffset": 0.001
+  },
+  "rendering": {
+    "windowWidth": 1280,
+    "windowHeight": 720,
+    "fullscreen": false,
+    "vsync": true,
+    "wireframe": false,
+    "showNormals": false,
+    "showContacts": false,
+    "backgroundColor": [0.2, 0.2, 0.2, 1.0],
+    "pointSize": 3.0,
+    "lineWidth": 1.0,
+    "shadowEnabled": true,
+    "shadowMapSize": 2048
+  },
+  "camera": {
+    "fov": 45.0,
+    "nearPlane": 0.1,
+    "farPlane": 1000.0,
+    "initialPosition": [5.0, 5.0, 5.0],
+    "lookAt": [0.0, 0.0, 0.0],
+    "upVector": [0.0, 1.0, 0.0]
+  },
+  "logging": {
+    "level": "INFO",
+    "logToFile": true,
+    "logFilePath": "logs/simulation.log",
+    "logToConsole": true
+  }
+}
