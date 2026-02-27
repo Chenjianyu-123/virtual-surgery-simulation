@@ -659,8 +659,9 @@
                 <div class="param-group">
                     <div class="param-row">
                         <span class="param-label" data-i18n="particleCount">Particle Count</span>
-                        <span class="param-value" id="particle-count">20</span>
+                        <span class="param-value" id="particle-count">10</span>
                     </div>
+                    <input type="range" id="particle-slider" min="5" max="30" step="1" value="10">
                 </div>
                 
                 <div class="param-group">
@@ -770,11 +771,11 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value" id="stat-particles">20</div>
+                        <div class="stat-value" id="stat-particles">10</div>
                         <div class="stat-label" data-i18n="particles">Particles</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="stat-constraints">19</div>
+                        <div class="stat-value" id="stat-constraints">9</div>
                         <div class="stat-label" data-i18n="constraints">Constraints</div>
                     </div>
                     <div class="stat-card">
@@ -980,7 +981,7 @@
                         velocity: new Vec3(0, 0, 0),
                         mass: 0.01,
                         inverseMass: 100,
-                        isFixed: i === 0 || i === count - 1
+                        isFixed: i === 0
                     });
                 }
 
@@ -1012,7 +1013,7 @@
                 for (const p of this.particles) {
                     if (p.isFixed) continue;
                     
-                    const totalForce = this.gravity.mul(p.mass).add(this.externalForce.mul(p.mass));
+                    const totalForce = this.gravity.mul(p.mass).add(this.externalForce.mul(p.mass * 50));
                     const acceleration = totalForce.mul(p.inverseMass);
                     
                     p.velocity = p.velocity.add(acceleration.mul(dt));
@@ -1155,7 +1156,7 @@
             const pointsPositions = new Float32Array(60);
             pointsGeometry.setAttribute('position', new THREE.BufferAttribute(pointsPositions, 3));
             const pointsMaterial = new THREE.PointsMaterial({
-                color: 0xff6b9d,
+                color: 0xff0000,
                 size: 0.08,
                 sizeAttenuation: true
             });
@@ -1166,11 +1167,11 @@
             const anchorGeometry = new THREE.SphereGeometry(0.05, 16, 16);
             const anchorMaterial = new THREE.MeshPhongMaterial({ color: 0x7c5cff, emissive: 0x7c5cff, emissiveIntensity: 0.3 });
             
-            const anchor1 = new THREE.Mesh(anchorGeometry, anchorMaterial);
+            anchor1 = new THREE.Mesh(anchorGeometry, anchorMaterial);
             anchor1.position.set(0, 1, 0);
             scene.add(anchor1);
             
-            const anchor2 = new THREE.Mesh(anchorGeometry, anchorMaterial);
+            anchor2 = new THREE.Mesh(anchorGeometry, anchorMaterial);
             anchor2.position.set(0, 0.15, 0);
             scene.add(anchor2);
 
@@ -1180,28 +1181,43 @@
             window.addEventListener('resize', onWindowResize);
         }
 
+        let anchor1, anchor2;
+
         function updateSutureVisual() {
-            const positions = sutureLine.geometry.attributes.position.array;
-            const pointsPos = suturePoints.geometry.attributes.position.array;
+            // 直接创建新的几何体，只包含实际的粒子
+            const requiredSize = simulation.particles.length * 3;
             
+            // 更新线段几何体
+            const linePositions = new Float32Array(requiredSize);
             for (let i = 0; i < simulation.particles.length; i++) {
                 const p = simulation.particles[i].position;
-                positions[i * 3] = p.x;
-                positions[i * 3 + 1] = p.y;
-                positions[i * 3 + 2] = p.z;
-                
-                pointsPos[i * 3] = p.x;
-                pointsPos[i * 3 + 1] = p.y;
-                pointsPos[i * 3 + 2] = p.z;
+                linePositions[i * 3] = p.x;
+                linePositions[i * 3 + 1] = p.y;
+                linePositions[i * 3 + 2] = p.z;
             }
+            sutureLine.geometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+            
+            // 更新粒子几何体
+            const pointsPositions = new Float32Array(requiredSize);
+            for (let i = 0; i < simulation.particles.length; i++) {
+                const p = simulation.particles[i].position;
+                pointsPositions[i * 3] = p.x;
+                pointsPositions[i * 3 + 1] = p.y;
+                pointsPositions[i * 3 + 2] = p.z;
+            }
+            suturePoints.geometry.setAttribute('position', new THREE.BufferAttribute(pointsPositions, 3));
             
             if (simulation.particles.length > 0) {
+                const firstP = simulation.particles[0].position;
                 const lastP = simulation.particles[simulation.particles.length - 1].position;
-                scene.children.forEach(c => {
-                    if (c.geometry?.type === 'SphereGeometry' && c.material?.color.getHex() === 0x7c5cff && c.position.y < 0.5) {
-                        c.position.set(lastP.x, lastP.y, lastP.z);
-                    }
-                });
+                
+                // 更新锚点位置
+                if (anchor1) {
+                    anchor1.position.set(firstP.x, firstP.y, firstP.z);
+                }
+                if (anchor2) {
+                    anchor2.position.set(lastP.x, lastP.y, lastP.z);
+                }
             }
             
             sutureLine.geometry.attributes.position.needsUpdate = true;
@@ -1422,6 +1438,33 @@
                 document.getElementById('stiff-value').textContent = simulation.stiffness.toFixed(1);
             });
 
+            document.getElementById('particle-slider').addEventListener('input', (e) => {
+                const particleCount = parseInt(e.target.value);
+                document.getElementById('particle-count').textContent = particleCount;
+                document.getElementById('stat-particles').textContent = particleCount;
+                document.getElementById('stat-constraints').textContent = particleCount - 1;
+                
+                const currentForce = simulation.externalForce;
+                const currentParams = {
+                    dt: simulation.dt,
+                    iterations: simulation.iterations,
+                    gravity: simulation.gravity.y,
+                    damping: simulation.damping,
+                    stiffness: simulation.stiffness
+                };
+                
+                simulation = new SutureSimulation();
+                simulation.createChain(particleCount, 1.2 / particleCount);
+                simulation.externalForce = currentForce;
+                simulation.dt = currentParams.dt;
+                simulation.iterations = currentParams.iterations;
+                simulation.gravity.y = currentParams.gravity;
+                simulation.damping = currentParams.damping;
+                simulation.stiffness = currentParams.stiffness;
+                
+                updateSutureVisual();
+            });
+
             document.getElementById('force-x-slider').addEventListener('input', (e) => {
                 simulation.externalForce.x = parseFloat(e.target.value);
                 document.getElementById('force-x').textContent = simulation.externalForce.x.toFixed(1);
@@ -1463,7 +1506,7 @@
         function resetSimulation() {
             stopSimulation();
             simulation = new SutureSimulation();
-            simulation.createChain(20);
+            simulation.createChain(10, 0.12);
             simulation.dt = parseFloat(document.getElementById('dt-slider').value);
             simulation.iterations = parseInt(document.getElementById('iter-slider').value);
             simulation.gravity.y = parseFloat(document.getElementById('grav-slider').value);
@@ -1482,7 +1525,7 @@
 
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
-            simulation.createChain(20);
+            simulation.createChain(10, 0.12);
             initThreeJS();
             initControls();
             animate();
