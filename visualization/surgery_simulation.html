@@ -1356,8 +1356,17 @@
             }
 
             const keys = {};
-            window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
-            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+            let ctrlPressed = false;
+            
+            window.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+                if (e.ctrlKey) ctrlPressed = true;
+            });
+            
+            window.addEventListener('keyup', (e) => {
+                keys[e.key.toLowerCase()] = false;
+                if (!e.ctrlKey) ctrlPressed = false;
+            });
 
             function updateKeyboardControls() {
                 const speed = 0.05;
@@ -1387,6 +1396,44 @@
                     if (keys['arrowright']) {
                         fixedParticle.position.x += particleSpeed;
                         fixedParticle.prevPosition.x += particleSpeed;
+                    }
+                }
+                
+                // 按住Ctrl键并按左右键控制目标粒子移动
+                if (ctrlPressed) {
+                    const targetParticleSpeed = 0.05;
+                    let targetParticle;
+                    
+                    // 根据forceTarget找到目标粒子
+                    if (simulation.forceTarget === 'first' && simulation.particles.length > 0) {
+                        targetParticle = simulation.particles[0];
+                    } else if (simulation.forceTarget === 'last' && simulation.particles.length > 0) {
+                        targetParticle = simulation.particles[simulation.particles.length - 1];
+                    }
+                    
+                    if (targetParticle && !targetParticle.isFixed) {
+                        // 计算粒子运动方向（沿缝合线方向）
+                        let direction = new Vec3(0, -1, 0); // 默认向下
+                        if (simulation.particles.length > 1) {
+                            if (simulation.forceTarget === 'first') {
+                                const nextParticle = simulation.particles[1];
+                                direction = nextParticle.position.sub(targetParticle.position).normalize();
+                            } else {
+                                const prevParticle = simulation.particles[simulation.particles.length - 2];
+                                direction = targetParticle.position.sub(prevParticle.position).normalize();
+                            }
+                        }
+                        
+                        if (keys['arrowleft']) {
+                            // 向前移动（沿缝合线方向）
+                            targetParticle.position = targetParticle.position.add(direction.mul(targetParticleSpeed));
+                            targetParticle.prevPosition = targetParticle.prevPosition.add(direction.mul(targetParticleSpeed));
+                        }
+                        if (keys['arrowright']) {
+                            // 向后移动（沿缝合线反方向）
+                            targetParticle.position = targetParticle.position.sub(direction.mul(targetParticleSpeed));
+                            targetParticle.prevPosition = targetParticle.prevPosition.sub(direction.mul(targetParticleSpeed));
+                        }
                     }
                 }
                 
