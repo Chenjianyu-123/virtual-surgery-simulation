@@ -677,6 +677,14 @@
                     </div>
                     <input type="range" id="stiff-slider" min="0.1" max="2.0" step="0.1" value="1.0">
                 </div>
+                
+                <div class="param-group">
+                    <div class="param-row">
+                        <span class="param-label">Suture Length</span>
+                        <span class="param-value" id="suture-length">1.2</span>
+                    </div>
+                    <input type="range" id="length-slider" min="0.5" max="3.0" step="0.1" value="1.2">
+                </div>
             </div>
             
             <div class="panel">
@@ -1288,8 +1296,28 @@
             const canvas = renderer.domElement;
 
             canvas.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                previousMousePosition = { x: e.clientX, y: e.clientY };
+                if (e.ctrlKey) {
+                    // Ctrl+左键向前运动，Ctrl+右键向后运动
+                    const moveSpeed = 0.2;
+                    if (e.button === 0) { // 左键
+                        // 向前运动（沿相机视线方向）
+                        const direction = new THREE.Vector3();
+                        camera.getWorldDirection(direction);
+                        camera.position.add(direction.multiplyScalar(moveSpeed));
+                        cameraTarget.add(direction.multiplyScalar(moveSpeed));
+                        updateCameraPosition();
+                    } else if (e.button === 2) { // 右键
+                        // 向后运动（沿相机视线反方向）
+                        const direction = new THREE.Vector3();
+                        camera.getWorldDirection(direction);
+                        camera.position.sub(direction.multiplyScalar(moveSpeed));
+                        cameraTarget.sub(direction.multiplyScalar(moveSpeed));
+                        updateCameraPosition();
+                    }
+                } else {
+                    isDragging = true;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
             });
 
             canvas.addEventListener('mousemove', (e) => {
@@ -1308,6 +1336,11 @@
 
             canvas.addEventListener('mouseup', () => isDragging = false);
             canvas.addEventListener('mouseleave', () => isDragging = false);
+
+            // 防止右键菜单干扰
+            canvas.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
 
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
@@ -1516,8 +1549,40 @@
                 document.getElementById('stiff-value').textContent = simulation.stiffness.toFixed(1);
             });
 
+            // 缝合线长度设置
+            document.getElementById('length-slider').addEventListener('input', (e) => {
+                const length = parseFloat(e.target.value);
+                document.getElementById('suture-length').textContent = length.toFixed(1);
+                
+                const particleCount = parseInt(document.getElementById('particle-slider').value);
+                const currentForce = simulation.externalForce;
+                const currentForceTarget = simulation.forceTarget;
+                const currentFixedIndex = simulation.fixedParticleIndex;
+                const currentParams = {
+                    dt: simulation.dt,
+                    iterations: simulation.iterations,
+                    gravity: simulation.gravity.y,
+                    damping: simulation.damping,
+                    stiffness: simulation.stiffness
+                };
+                
+                simulation = new SutureSimulation();
+                simulation.forceTarget = currentForceTarget;
+                simulation.fixedParticleIndex = currentFixedIndex;
+                simulation.createChain(particleCount, length / particleCount);
+                simulation.externalForce = currentForce;
+                simulation.dt = currentParams.dt;
+                simulation.iterations = currentParams.iterations;
+                simulation.gravity.y = currentParams.gravity;
+                simulation.damping = currentParams.damping;
+                simulation.stiffness = currentParams.stiffness;
+                
+                updateSutureVisual();
+            });
+
             document.getElementById('particle-slider').addEventListener('input', (e) => {
                 const particleCount = parseInt(e.target.value);
+                const length = parseFloat(document.getElementById('length-slider').value);
                 document.getElementById('particle-count').textContent = particleCount;
                 document.getElementById('stat-particles').textContent = particleCount;
                 document.getElementById('stat-constraints').textContent = particleCount - 1;
@@ -1536,7 +1601,7 @@
                 simulation = new SutureSimulation();
                 simulation.forceTarget = currentForceTarget;
                 simulation.fixedParticleIndex = currentFixedIndex;
-                simulation.createChain(particleCount, 1.2 / particleCount);
+                simulation.createChain(particleCount, length / particleCount);
                 simulation.externalForce = currentForce;
                 simulation.dt = currentParams.dt;
                 simulation.iterations = currentParams.iterations;
@@ -1602,11 +1667,12 @@
             stopSimulation();
             const currentForceTarget = simulation.forceTarget;
             const currentFixedIndex = simulation.fixedParticleIndex;
+            const length = parseFloat(document.getElementById('length-slider').value);
             
             simulation = new SutureSimulation();
             simulation.forceTarget = currentForceTarget;
             simulation.fixedParticleIndex = currentFixedIndex;
-            simulation.createChain(10, 0.12);
+            simulation.createChain(10, length / 10);
             simulation.dt = parseFloat(document.getElementById('dt-slider').value);
             simulation.iterations = parseInt(document.getElementById('iter-slider').value);
             simulation.gravity.y = parseFloat(document.getElementById('grav-slider').value);
@@ -1625,7 +1691,8 @@
 
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
-            simulation.createChain(10, 0.12);
+            const length = parseFloat(document.getElementById('length-slider').value);
+            simulation.createChain(10, length / 10);
             initThreeJS();
             initControls();
             animate();
