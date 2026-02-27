@@ -1412,27 +1412,15 @@
                     }
                     
                     if (targetParticle && !targetParticle.isFixed) {
-                        // 计算粒子运动方向（沿缝合线方向）
-                        let direction = new Vec3(0, -1, 0); // 默认向下
-                        if (simulation.particles.length > 1) {
-                            if (simulation.forceTarget === 'first') {
-                                const nextParticle = simulation.particles[1];
-                                direction = nextParticle.position.sub(targetParticle.position).normalize();
-                            } else {
-                                const prevParticle = simulation.particles[simulation.particles.length - 2];
-                                direction = targetParticle.position.sub(prevParticle.position).normalize();
-                            }
-                        }
-                        
                         if (keys['arrowleft']) {
-                            // 向前移动（沿缝合线方向）
-                            targetParticle.position = targetParticle.position.add(direction.mul(targetParticleSpeed));
-                            targetParticle.prevPosition = targetParticle.prevPosition.add(direction.mul(targetParticleSpeed));
+                            // 沿z正方向移动
+                            targetParticle.position.z += targetParticleSpeed;
+                            targetParticle.prevPosition.z += targetParticleSpeed;
                         }
                         if (keys['arrowright']) {
-                            // 向后移动（沿缝合线反方向）
-                            targetParticle.position = targetParticle.position.sub(direction.mul(targetParticleSpeed));
-                            targetParticle.prevPosition = targetParticle.prevPosition.sub(direction.mul(targetParticleSpeed));
+                            // 沿z负方向移动
+                            targetParticle.position.z -= targetParticleSpeed;
+                            targetParticle.prevPosition.z -= targetParticleSpeed;
                         }
                     }
                 }
